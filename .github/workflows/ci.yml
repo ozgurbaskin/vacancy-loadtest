@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - name: lock file matches pyproject.toml
+        run: uv lock --check
+      - run: uv sync --frozen
+      - name: lint
+        run: make lint
+      - name: generated code matches proto/
+        run: make proto-check
+      - name: unit and integration tests (fake server)
+        run: make test
+      - name: headless smoke run (fake server)
+        run: make smoke

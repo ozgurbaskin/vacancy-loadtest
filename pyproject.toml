@@ -1,0 +1,39 @@
+[project]
+name = "vacancy-loadtest"
+version = "0.1.0"
+description = "Locust load test for the Cyrex gRPC vacancy service (Python Dev practical test)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "locust>=2.46,<3",
+    "grpcio>=1.84,<2",
+    "protobuf>=7.35.1,<8",
+]
+
+[dependency-groups]
+dev = [
+    "grpcio-tools>=1.84,<2",
+    "pytest>=8.3",
+    "pytest-timeout>=2.3",
+    "ruff>=0.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vacancy_loadtest"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["src/vacancy_loadtest/pb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 60

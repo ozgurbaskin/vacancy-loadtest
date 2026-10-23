@@ -1,0 +1,40 @@
+# Distributed run: one master (web UI on :8089) and N workers.
+#   cd docker && docker compose up --build --scale worker=2
+# Offline demo against the fake server shipped with the project:
+#   LOADTEST_HOST=fake-server:50051 CREDENTIALS_FILE=../credentials.example.json \
+#       docker compose --profile fake up --build --scale worker=2
+x-loadtest: &loadtest
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+  environment:
+    LOADTEST_HOST: ${LOADTEST_HOST:-vacancies.cyrextech.net:7823}
+    LOADTEST_CREDENTIALS_FILE: /run/credentials.json
+  volumes:
+    - ${CREDENTIALS_FILE:-../credentials.json}:/run/credentials.json:ro
+
+services:
+  master:
+    <<: *loadtest
+    command: ["--master", "--expect-workers", "${WORKERS:-2}"]
+    ports:
+      - "8089:8089"
+
+  worker:
+    <<: *loadtest
+    command: ["--worker", "--master-host", "master"]
+    depends_on:
+      - master
+    deploy:
+      replicas: ${WORKERS:-2}
+
+  fake-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    entrypoint: ["python", "-m", "vacancy_loadtest.fake_server"]
+    command: ["--bind", "0.0.0.0", "--port", "50051", "--credentials", "/run/credentials.json",
+              "--seed-vacancies", "25", "--latency-ms", "10"]
+    volumes:
+      - ${CREDENTIALS_FILE:-../credentials.json}:/run/credentials.json:ro
+    profiles: ["fake"]

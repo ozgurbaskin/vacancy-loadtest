@@ -1,0 +1,20 @@
+# virtualenv / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# secrets & local config
+credentials.json
+.env
+
+# local run artefacts (sample reports under reports/ are committed on purpose)
+*.zip
+.DS_Store
+
+# local runs (make headless); the sample results live in reports/sample/
+reports/latest/
